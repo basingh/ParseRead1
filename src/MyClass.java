@@ -21,6 +21,7 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.Message;
+import com.google.api.services.gmail.model.MessagePart;
 
 import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 import com.google.api.services.gmail.Gmail;
@@ -34,6 +35,25 @@ import java.util.Properties;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+
+/**
+ * 
+ * Get Mime Message
+ * @author basingh
+ *
+ */
+ 
+ 
+import javax.mail.internet.MimeMessage; 
+import java.io.File; 
+import java.io.FileInputStream; 
+import java.io.IOException;
+/**
+ * Eng get Mime Message
+ * 
+ * @author basingh
+ *
+ */
 
 public class MyClass {
 	/** Application name. */
@@ -63,6 +83,8 @@ public class MyClass {
 
 	/** File to Client secret */
 	private static final String CLIENT_SECRET_FILE = "/client_secret.json";
+	
+
 
 	static {
 		try {
@@ -79,7 +101,7 @@ public class MyClass {
 	 */
 	public static Credential authorize() throws IOException {
 		// Load client secrets.
-		InputStream in = MyClass.class.getResourceAsStream(CLIENT_SECRET_FILE);
+ 		InputStream in = MyClass.class.getResourceAsStream(CLIENT_SECRET_FILE);
 		GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
 				JSON_FACTORY, new InputStreamReader(in));
 
@@ -96,6 +118,16 @@ public class MyClass {
 
 		return credential;
 	}
+	
+	/**
+	 * Get Mime message
+	 * 
+	 */
+	  
+	/**
+	 * End Get Mime Message
+	 * 
+	 */
 
 	/**
 	 * Build and return an authorized Gmail client service.
@@ -108,14 +140,40 @@ public class MyClass {
 	
 	 public static Message getMessage(Gmail service, String userId, String messageId)
 		      throws IOException {
-		    Message message = service.users().messages().get(userId, messageId).execute();
-
-		    System.out.println("Message snippet: " + message.getSnippet());
-		    System.out.println("Message Info: " + message.toPrettyString());
+		    Message message = service.users().messages().get(userId, messageId).setFormat("RAW").execute();
+		    String mailBody;
+		//	System.out.println("Message snippet to String: " + message);
+			
+		//    System.out.println("Message snippet: " + message.getSnippet());
+		//    System.out.println("Message Info: " + message.toPrettyString());
 		//	Message message = service.users().messages().get("me", messages.get(i).getId()).setFormat("full").execute();
-			System.out.println("Message Snippet: " + message.getSnippet());
-			System.out.println("Message Payload: " + message.getPayload());
-
+		//	System.out.println("Message Snippet: " + message.getSnippet());
+		//	System.out.println("Message Payload: " + message.getPayload());
+			//get Mime Message
+			
+		
+			//end get Mime Message
+		    
+		    /**
+		     * new deocode start
+		     
+		    
+		    String mimeType = message.getPayload().getMimeType();
+		    List<MessagePart> parts = message.getPayload().getParts();
+		    if (mimeType.contains("alternative")) {
+		      //  log.info("entering alternative loop");
+		        for (MessagePart part : parts) {
+		             mailBody = new String(Base64.decodeBase64(part.getBody()
+		                    .getData().getBytes()));
+		             
+		        }
+		        
+		       // log.info(mailBody);
+		    }
+		   
+		    /
+		     * new decode end
+		     */
 		    return message;
 		  }
 	 
@@ -130,7 +188,8 @@ public class MyClass {
 		    Session session = Session.getDefaultInstance(props, null);
 
 		    MimeMessage email = new MimeMessage(session, new ByteArrayInputStream(emailBytes));
-		    
+		   
+		    System.out.println("Message email parsed: " + email.getFrom());
 		    System.out.println("Message email: " + email);
 		    
 
@@ -144,7 +203,8 @@ public class MyClass {
 			Gmail service = getGmailService();
 			
 			//Get a Message and use it to create a MimeMessage.
-			getMessage ( service, "me", "156204705c5dbed8");
+			//getMimeMessage (service, "me", "15ccd7c2feec35d7");
+			getMessage ( service, "me", "15ccd7c2feec35d7");
 			// Get list of messages
 			ListMessagesResponse response = service.users().messages()
 					.list("me").execute();
@@ -163,10 +223,22 @@ public class MyClass {
 			}
 			// Get message content
 			for (int i = 0; i < messages.size() && i < EMAIL_QTY; i++) {
-				System.out.println("Message Info: " + messages.get(i).toPrettyString());
+		//		System.out.println("Message Info: " + messages.get(i).toPrettyString());
 				Message message = service.users().messages().get("me", messages.get(i).getId()).setFormat("full").execute();
-				System.out.println("Message Snippet: " + message.getSnippet());
-				System.out.println("Message Payload: " + message.getPayload());
+		//		System.out.println("Message Snippet: " + message.getSnippet());
+		//		System.out.println("Message Payload: " + message.getPayload().getMimeType());
+				String mimeType = message.getPayload().getMimeType();
+				 List<MessagePart> parts = message.getPayload().getParts();
+				    if (mimeType.contains("alternative")) {
+				      //  log.info("entering alternative loop");
+				        for (MessagePart part : parts) {
+				             String mailBody = new String(Base64.decodeBase64(part.getBody()
+				                    .getData().getBytes()));
+				             System.out.println("Body content  :"+mailBody);
+				        }
+				        
+				       // log.info(mailBody);
+				    }
 			}
 		} catch (Exception e) {
 			System.err.println("Error: " + e.getMessage());
